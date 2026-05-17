@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Geometry Pro - Bikash Bhusal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; overflow: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.4); }
+        .dark .glass { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .handle { cursor: grab; transition: all 0.2s; }
+        .handle:active { cursor: grabbing; r: 12; filter: brightness(1.2); }
+        .math-bg { background-image: radial-gradient(#cbd5e1 0.8px, transparent 0.8px); background-size: 20px 20px; }
+        .dark .math-bg { background-image: radial-gradient(#334155 0.8px, transparent 0.8px); }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
+        .tab-btn.active { background-color: #6366f1; color: white; }
+    </style>
+</head>
+<body class="math-bg h-screen w-screen flex flex-col bg-slate-50 dark:bg-slate-950 dark:text-white transition-colors duration-300">
+
+    <header class="w-full py-6 px-8 glass flex flex-col items-center justify-center border-b shadow-md z-20 text-center">
+        <h1 class="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-rose-600">Part of Circle</h1>
+        <p class="text-xs text-slate-500 font-bold tracking-widest uppercase mt-1">Design by: Bikash Bhusal</p>
+    </header>
+
+    <div class="w-full glass py-3 px-8 flex items-center justify-between border-b shadow-sm z-10">
+        <div class="flex items-center gap-6">
+            <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-slate-500 uppercase mb-1">Animation Speed</span>
+                <input type="range" id="speed-slider" min="0.1" max="5" step="0.1" value="1" class="w-32 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+            </div>
+            <button onclick="toggleAnimate()" id="btn-play" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-sm font-bold shadow-lg transition-all flex items-center gap-2">
+                <i class="fa-solid fa-play"></i><span>Play</span>
+            </button>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="resetEngine()" class="px-6 py-2 bg-slate-200 dark:bg-slate-800 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors">Reset</button>
+            <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 bg-white dark:bg-slate-800 rounded-full border shadow-sm"><i class="fa-solid fa-circle-half-stroke"></i></button>
+        </div>
+    </div>
+
+    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+        
+        <section class="lg:col-span-7 glass rounded-[3rem] relative flex items-center justify-center shadow-2xl overflow-hidden border-2 border-white/50">
+            <svg id="canvas" viewBox="0 0 800 800" class="w-full h-full max-w-[92%] max-h-[92%] drop-shadow-2xl">
+                <path id="area-sector" fill="rgba(79, 70, 229, 0.15)" class="hidden" />
+                <path id="area-segment" fill="rgba(225, 29, 72, 0.15)" class="hidden" />
+                <path id="area-semicircle" fill="rgba(20, 184, 166, 0.15)" class="hidden" />
+                <path id="area-quadrant" fill="rgba(16, 185, 129, 0.15)" class="hidden" />
+
+                <circle id="main-circle" cx="400" cy="400" r="300" fill="none" stroke="#334155" stroke-width="6" />
+                
+                <line id="draw-radius" x1="400" y1="400" stroke="#3b82f6" stroke-width="8" class="hidden" />
+                <line id="draw-diameter" stroke="#f59e0b" stroke-width="8" class="hidden" />
+                <line id="draw-tangent" stroke="#e11d48" stroke-width="6" class="hidden" />
+                <path id="draw-arc" fill="none" stroke="#ec4899" stroke-width="12" stroke-linecap="round" class="hidden" />
+                
+                <line id="line-c1" x1="400" y1="400" stroke="#6366f1" stroke-width="4" opacity="0.6" class="hidden" />
+                <line id="line-c2" x1="400" y1="400" stroke="#6366f1" stroke-width="4" opacity="0.6" class="hidden" />
+                <line id="line-i1" stroke="#f43f5e" stroke-width="4" class="hidden" />
+                <line id="line-i2" stroke="#f43f5e" stroke-width="4" class="hidden" />
+
+                <circle id="p-center" cx="400" cy="400" r="8" fill="#4f46e5" stroke="white" stroke-width="3" />
+                <circle id="p-interior" r="10" fill="#facc15" stroke="white" stroke-width="2" class="handle hidden" />
+                <circle id="p-exterior" r="10" fill="#94a3b8" stroke="white" stroke-width="2" class="handle hidden" />
+                
+                <circle id="h-radius" r="7" fill="red" stroke="white" stroke-width="2" class="handle hidden" />
+                <circle id="h-arc1" r="9" fill="#ec4899" stroke="white" stroke-width="2" class="handle hidden" />
+                <circle id="h-arc2" r="9" fill="#ec4899" stroke="white" stroke-width="2" class="handle hidden" />
+                <circle id="h-tangent" r="9" fill="#e11d48" stroke="white" stroke-width="2" class="handle hidden" />
+                <circle id="h-inscribed" r="9" fill="#f43f5e" stroke="white" stroke-width="2" class="handle hidden" />
+            </svg>
+        </section>
+
+        <section class="lg:col-span-5 flex flex-col gap-6 overflow-hidden">
+            
+            <div class="flex-[1.2] glass rounded-[2.5rem] p-6 flex flex-col overflow-hidden shadow-lg">
+                <h2 class="text-xs font-black text-indigo-600 mb-4 tracking-widest uppercase"><i class="fa-solid fa-shapes mr-2"></i>Components</h2>
+                <div id="checklist" class="grid grid-cols-2 gap-3 overflow-y-auto pr-2 custom-scroll"></div>
+            </div>
+
+            <div class="flex-1 glass rounded-[2.5rem] p-6 flex flex-col border-l-[12px] border-indigo-500 shadow-xl overflow-hidden">
+                <div class="flex gap-2 mb-4">
+                    <button onclick="setLang('en')" id="btn-en" class="tab-btn active px-4 py-1.5 rounded-lg text-[10px] font-bold border transition-all uppercase">English</button>
+                    <button onclick="setLang('ne')" id="btn-ne" class="tab-btn px-4 py-1.5 rounded-lg text-[10px] font-bold border transition-all uppercase">नेपाली</button>
+                </div>
+                <div id="inspect-content" class="overflow-y-auto custom-scroll">
+                    <h3 id="ins-title" class="text-xl font-black text-slate-800 dark:text-white mb-2">Select a part</h3>
+                    <p id="ins-text" class="text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-300"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const PARTS = [
+            { id: 'center', name: 'Center', color: '#4f46e5', en: 'The central point of the circle from which all points on the circumference are equidistant.', ne: 'वृत्तको बीचको यस्तो बिन्दु जहाँबाट परिधिका सबै बिन्दुहरू समान दूरीमा रहन्छन्।' },
+            { id: 'radius', name: 'Radius', color: '#3b82f6', en: 'A straight line from the center to the circumference of a circle.', ne: 'वृत्तको केन्द्रदेखि परिधिसम्मको दूरीलाई अर्धव्यास भनिन्छ।' },
+            { id: 'diameter', name: 'Diameter', color: '#f59e0b', en: 'A straight line passing from side to side through the center of a circle.', ne: 'वृत्तको केन्द्र भएर जाने र परिधिका दुई बिन्दुहरूलाई जोड्ने रेखालाई व्यास भनिन्छ।' },
+            { id: 'central-angle', name: 'Central Angle', color: '#6366f1', en: 'An angle whose vertex is the center of the circle and whose legs are radii.', ne: 'वृत्तको केन्द्रमा शीर्ष बिन्दु भएर बनेको कोणलाई केन्द्रीय कोण भनिन्छ।' },
+            { id: 'inscribed-angle', name: 'Inscribed Angle', color: '#f43f5e', en: 'An angle formed by two chords in a circle that have a common endpoint on the circle.', ne: 'वृत्तको परिधिमा शीर्ष बिन्दु रहने गरी दुईवटा जिवाहरूले बनाएको कोणलाई परिधि कोण भनिन्छ।' },
+            { id: 'arc', name: 'Arc', color: '#ec4899', en: 'A portion of the circumference of a circle.', ne: 'वृत्तको परिधिको कुनै एक खण्ड वा भागलाई चाप भनिन्छ।' },
+            { id: 'sector', name: 'Sector', color: '#4f46e5', en: 'A region bounded by two radii and an arc of a circle.', ne: 'दुईवटा अर्धव्यास र एउटा चापले घेरिएको क्षेत्रलाई खण्ड भनिन्छ।' },
+            { id: 'semicircle', name: 'Semicircle', color: '#14b8a6', en: 'A half of a circle or of its circumference.', ne: 'वृत्तको आधा भाग वा व्यासले छुट्याएको वृत्तको आधा क्षेत्रलाई अर्धवृत्त भनिन्छ।' },
+            { id: 'quadrant', name: 'Quadrant', color: '#10b981', en: 'A quarter of a circle or of its circumference.', ne: 'वृत्तको चौथाई भाग वा ९० डिग्रीको क्षेत्रलाई चतुर्थांश भनिन्छ।' },
+            { id: 'tangent', name: 'Tangent', color: '#e11d48', en: 'A line that touches the circle at exactly one point.', ne: 'वृत्तको परिधिलाई एउटा मात्र बिन्दुमा छुने रेखालाई स्पर्श रेखा भनिन्छ।' },
+            { id: 'interior', name: 'Interior', color: '#facc15', en: 'The area inside the circle.', ne: 'वृत्तको परिधिभित्र पर्ने क्षेत्र वा बिन्दु।' },
+            { id: 'exterior', name: 'Exterior', color: '#94a3b8', en: 'The area outside the circle.', ne: 'वृत्तको परिधिभन्दा बाहिर पर्ने क्षेत्र वा बिन्दु।' }
+        ];
+
+        let state = { radius: 0, arc1: 0.5, arc2: 2.5, tangent: 5.5, inscribed: 4.2, intX: 350, intY: 380, extX: 100, extY: 100, animate: false, lang: 'en', activePart: PARTS[0] };
+        let selected = new Set(['center', 'radius']);
+        const R = 300, CX = 400, CY = 400;
+
+        function init() {
+            const list = document.getElementById('checklist');
+            PARTS.forEach(p => {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-3 p-3 rounded-2xl bg-white/50 dark:bg-slate-800/50 hover:border-indigo-400 border border-transparent cursor-pointer transition-all";
+                div.innerHTML = `<input type="checkbox" id="c-${p.id}" ${selected.has(p.id)?'checked':''} class="w-4 h-4 rounded text-indigo-600"><span class="text-[10px] font-black uppercase">${p.name}</span>`;
+                div.onclick = (e) => {
+                    const chk = div.querySelector('input');
+                    if(e.target !== chk) chk.checked = !chk.checked;
+                    chk.checked ? selected.add(p.id) : selected.delete(p.id);
+                    state.activePart = p; update(); renderDef();
+                };
+                list.appendChild(div);
+            });
+            update(); setupDrag(); renderDef();
+        }
+
+        function setLang(l) {
+            state.lang = l;
+            document.getElementById('btn-en').classList.toggle('active', l === 'en');
+            document.getElementById('btn-ne').classList.toggle('active', l === 'ne');
+            renderDef();
+        }
+
+        function renderDef() {
+            document.getElementById('ins-title').innerText = state.activePart.name;
+            document.getElementById('ins-title').style.color = state.activePart.color;
+            document.getElementById('ins-text').innerText = state.lang === 'en' ? state.activePart.en : state.activePart.ne;
+        }
+
+        function update() {
+            const getPos = (a) => ({ x: CX + R * Math.cos(a), y: CY + R * Math.sin(a) });
+            const pR = getPos(state.radius), pA1 = getPos(state.arc1), pA2 = getPos(state.arc2), pT = getPos(state.tangent), pI = getPos(state.inscribed);
+
+            toggle('draw-radius', selected.has('radius'), {x2: pR.x, y2: pR.y});
+            toggle('draw-diameter', selected.has('diameter'), {x1: pR.x, y1: pR.y, x2: getPos(state.radius+Math.PI).x, y2: getPos(state.radius+Math.PI).y});
+            
+            const diff = (state.arc2 - state.arc1 + 2 * Math.PI) % (2 * Math.PI);
+            const flag = diff > Math.PI ? 1 : 0;
+            const path = `M ${pA1.x} ${pA1.y} A ${R} ${R} 0 ${flag} 1 ${pA2.x} ${pA2.y}`;
+            toggle('draw-arc', selected.has('arc'), {d: path});
+            toggle('area-sector', selected.has('sector'), {d: `${path} L ${CX} ${CY} Z`});
+            toggle('area-segment', selected.has('segment'), {d: `${path} Z`});
+            toggle('area-semicircle', selected.has('semicircle'), {d: `M ${pA1.x} ${pA1.y} A ${R} ${R} 0 0 1 ${getPos(state.arc1+Math.PI).x} ${getPos(state.arc1+Math.PI).y} Z`});
+            toggle('area-quadrant', selected.has('quadrant'), {d: `M ${CX} ${CY} L ${pA1.x} ${pA1.y} A ${R} ${R} 0 0 1 ${getPos(state.arc1+Math.PI/2).x} ${getPos(state.arc1+Math.PI/2).y} Z`});
+
+            toggle('line-c1', selected.has('central-angle'), {x2: pA1.x, y2: pA1.y});
+            toggle('line-c2', selected.has('central-angle'), {x2: pA2.x, y2: pA2.y});
+            toggle('line-i1', selected.has('inscribed-angle'), {x1: pI.x, y1: pI.y, x2: pA1.x, y2: pA1.y});
+            toggle('line-i2', selected.has('inscribed-angle'), {x1: pI.x, y1: pI.y, x2: pA2.x, y2: pA2.y});
+
+            const TL = 200;
+            toggle('draw-tangent', selected.has('tangent'), {x1: pT.x - TL*Math.sin(state.tangent), y1: pT.y + TL*Math.cos(state.tangent), x2: pT.x + TL*Math.sin(state.tangent), y2: pT.y - TL*Math.cos(state.tangent)});
+
+            handle('h-radius', pR.x, pR.y, selected.has('radius'));
+            handle('h-arc1', pA1.x, pA1.y, selected.has('arc')||selected.has('sector')||selected.has('central-angle')||selected.has('semicircle')||selected.has('quadrant'));
+            handle('h-arc2', pA2.x, pA2.y, selected.has('arc')||selected.has('sector')||selected.has('central-angle'));
+            handle('h-tangent', pT.x, pT.y, selected.has('tangent'));
+            handle('h-inscribed', pI.x, pI.y, selected.has('inscribed-angle'));
+            handle('p-interior', state.intX, state.intY, selected.has('interior'));
+            handle('p-exterior', state.extX, state.extY, selected.has('exterior'));
+        }
+
+        function toggle(id, show, attrs={}) {
+            const el = document.getElementById(id);
+            el.classList.toggle('hidden', !show);
+            for(let k in attrs) el.setAttribute(k, attrs[k]);
+        }
+
+        function handle(id, x, y, show) {
+            const el = document.getElementById(id);
+            el.setAttribute('cx', x); el.setAttribute('cy', y);
+            el.classList.toggle('hidden', !show);
+        }
+
+        function setupDrag() {
+            let target = null;
+            const svg = document.getElementById('canvas');
+            const onMove = (e) => {
+                if(!target) return;
+                const r = svg.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - r.left, y = (e.clientY || e.touches[0].clientY) - r.top;
+                const ang = Math.atan2(y - r.height/2, x - r.width/2);
+                if(target.id.startsWith('h-')) {
+                    const key = target.id.replace('h-', '');
+                    state[key] = ang;
+                } else {
+                    const cx = (x / r.width) * 800, cy = (y / r.height) * 800;
+                    if(target.id === 'p-interior') { state.intX = cx; state.intY = cy; }
+                    else { state.extX = cx; state.extY = cy; }
+                }
+                update();
+            };
+            svg.onmousedown = (e) => { if(e.target.classList.contains('handle')) target = e.target; };
+            window.onmousemove = onMove; window.onmouseup = () => target = null;
+        }
+
+        function toggleAnimate() {
+            state.animate = !state.animate;
+            document.getElementById('btn-play').innerHTML = state.animate ? '<i class="fa-solid fa-pause"></i><span>Pause</span>' : '<i class="fa-solid fa-play"></i><span>Play</span>';
+            if(state.animate) requestAnimationFrame(ani);
+        }
+
+        function ani() {
+            if(!state.animate) return;
+            const speed = parseFloat(document.getElementById('speed-slider').value);
+            state.radius += 0.01 * speed; state.tangent -= 0.007 * speed; state.arc1 += 0.005 * speed;
+            state.intX = CX + Math.cos(state.radius*2.5)*120; state.intY = CY + Math.sin(state.radius*2.5)*120;
+            state.extX = CX + Math.cos(state.radius)*420; state.extY = CY + Math.sin(state.radius)*420;
+            update(); requestAnimationFrame(ani);
+        }
+
+        function resetEngine() {
+            state = { radius: 0, arc1: 0.5, arc2: 2.5, tangent: 5.5, inscribed: 4.2, intX: 350, intY: 380, extX: 100, extY: 100, animate: false, lang: 'en', activePart: PARTS[0] };
+            selected = new Set(['center', 'radius']);
+            document.getElementById('speed-slider').value = 1;
+            document.querySelectorAll('#checklist input').forEach(i => i.checked = selected.has(i.id.replace('c-','')));
+            setLang('en'); update();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
